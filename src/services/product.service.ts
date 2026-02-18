@@ -1,62 +1,61 @@
-import { products, type Product } from "#models/product.model";
-
+import prisma from "#utils/prisma"
+import type { Prisma, Products } from "@prisma/client"
 
 export class ProductService {
-    static getAll(): Product[] {
-        return products
+    static async getAll(): Promise<Products[]> {
+        return await prisma.products.findMany();
     }
 
-    static getById(id: number): Product {
-        const product = products.find(p => p.id === id)
+    static async getById(id: number): Promise<Products> {
+        const product = await prisma.products.findUnique({
+            where: { id }
+        })
         if (!product) {
             throw new Error("Produk tidak ditemukan")
         }
         return product
     }
 
-    static create(data: { nama: string, deskripsi: string, harga: number }): Product {
-        const newProduct = {
-            id: products.length + 1,
-            ...data,
-        }
-
-        products.push(newProduct)
-        return newProduct
+    static async create(data: { name: string, description: string, price: number, stock: number }): Promise<Products> {
+        return await prisma.products.create({ data })
     }
 
-    static update(id: number, data: any): Product | undefined {
-        const index = products.findIndex(p => p.id === id)
-        if (index === -1) {
-            throw new Error("Produk tidak ditemukan")
-        }
+    static async update(
+        id: number,
+        data: {
+            name?: string,
+            description?: string,
+            price?: number,
+            stock?: number,
+        }): Promise<Products | undefined> {
+        await this.getById(id)
 
-        products[index] = {
-            ...products[index],
-            ...data,
-        }
-
-        return products[index]
+        return await prisma.products.update({
+            where: { id },
+            data
+        })
     }
 
-    static delete(id: number): Product | undefined {
-        const index = products.findIndex(p => p.id === id)
-        if (index === -1) {
-            throw new Error("Produk tidak ditemukan")
-        }
+    static async delete(id: number): Promise<Products | undefined> {
+        await this.getById(id)
 
-        return products.splice(index, 1)[0]
+        return prisma.products.delete({ where: { id } })
     }
 
-    static search(name?: string, maxPrice?: number): Product[] {
-        let results = products
+    static async search(name?: string, maxPrice?: number): Promise<Products[]> {
+        const where: Prisma.ProductsWhereInput = {}
         if (name) {
-            results = results.filter(p => p.nama.toLowerCase().includes(name.toLowerCase()))
+            where.name = {
+                contains: name
+            }
         }
-
         if (maxPrice) {
-            results = results.filter(p => p.harga <= maxPrice)
+            where.price = {
+                lte: maxPrice
+            }
         }
-
-        return results
+        return await prisma.products.findMany({
+            where
+        })
     }
 }
