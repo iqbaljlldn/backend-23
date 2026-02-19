@@ -3,12 +3,19 @@ import type { Prisma, Products } from "@prisma/client"
 
 export class ProductService {
     static async getAll(): Promise<Products[]> {
-        return await prisma.products.findMany();
+        return await prisma.products.findMany({
+            include: {
+                category: true,
+            }
+        });
     }
 
     static async getById(id: number): Promise<Products> {
         const product = await prisma.products.findUnique({
-            where: { id }
+            where: { id },
+            include: {
+                category: true,
+            }
         })
         if (!product) {
             throw new Error("Produk tidak ditemukan")
@@ -16,8 +23,8 @@ export class ProductService {
         return product
     }
 
-    static async create(data: { name: string, description: string, price: number, stock: number }): Promise<Products> {
-        return await prisma.products.create({ data })
+    static async create(data: { name: string, description: string, price: number, stock: number, category_id: number }): Promise<Products> {
+        return await prisma.products.create({ data, include: { category: true } })
     }
 
     static async update(
@@ -27,12 +34,14 @@ export class ProductService {
             description?: string,
             price?: number,
             stock?: number,
+            category_id?: number
         }): Promise<Products | undefined> {
         await this.getById(id)
 
         return await prisma.products.update({
             where: { id },
-            data
+            data,
+            include: { category: true }
         })
     }
 
@@ -55,7 +64,8 @@ export class ProductService {
             }
         }
         return await prisma.products.findMany({
-            where
+            where,
+            include: { category: true }
         })
     }
 }
