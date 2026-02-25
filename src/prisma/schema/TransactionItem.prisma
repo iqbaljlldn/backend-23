@@ -1,0 +1,14 @@
+model TransactionItems {
+    id             Int     @id @default(autoincrement())
+    transaction_id Int
+    product_id     Int
+    quantity       Int
+    price_at_time  Decimal @db.Decimal(10, 2)
+
+    transaction Transactions @relation(fields: [transaction_id], references: [id])
+    product     Products     @relation(fields: [product_id], references: [id])
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime? @db.Timestamp
+}

@@ -1,0 +1,11 @@
+model Transactions {
+    id               Int               @id @default(autoincrement())
+    total_price      Decimal           @db.Decimal(10, 2)
+    user             User              @relation(fields: [userId], references: [id])
+    userId           Int
+    transactionItems TransactionItems[]
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime? @db.Timestamp
+}

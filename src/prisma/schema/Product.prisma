@@ -10,4 +10,6 @@ model Products {
 
     category_id Int
     category    Categories @relation(fields: [category_id], references: [id])
+
+    transactionItems TransactionItems[]
 }

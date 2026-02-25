@@ -5,6 +5,8 @@ import morgan from "morgan"
 import { successResponse } from "#utils/response"
 import productRouter from "#routes/product.route"
 import categoryRouter from "#routes/category.route"
+import transactionRouter from "#routes/transaction.route"
+import userRouter from "#routes/user.route"
 import { errorHandler } from "#middlewares/error.handler"
 const app = express()
 
@@ -56,6 +58,8 @@ app.get('/', (req: Request, res: Response) => {
 
 app.use('/api/products', productRouter)
 app.use('/api/categories', categoryRouter)
+app.use('/api/transactions', transactionRouter)
+app.use('/api/users', userRouter)
 
 app.use(errorHandler)
 
