@@ -6,13 +6,19 @@ export class ProductService {
         return await prisma.products.findMany({
             include: {
                 category: true,
+            },
+            where: {
+                deletedAt: null,
             }
         });
     }
 
     static async getById(id: number): Promise<Products> {
         const product = await prisma.products.findUnique({
-            where: { id },
+            where: {
+                id,
+                deletedAt: null
+            },
             include: {
                 category: true,
             }
@@ -39,7 +45,10 @@ export class ProductService {
         await this.getById(id)
 
         return await prisma.products.update({
-            where: { id },
+            where: {
+                id,
+                deletedAt: null
+            },
             data,
             include: { category: true }
         })
@@ -48,7 +57,15 @@ export class ProductService {
     static async delete(id: number): Promise<Products | undefined> {
         await this.getById(id)
 
-        return prisma.products.delete({ where: { id } })
+        return prisma.products.update({
+            where: {
+                id,
+                deletedAt: null
+            },
+            data: {
+                deletedAt: new Date()
+            }
+        })
     }
 
     static async search(name?: string, maxPrice?: number): Promise<Products[]> {
@@ -64,7 +81,10 @@ export class ProductService {
             }
         }
         return await prisma.products.findMany({
-            where,
+            where: {
+                ...where,
+                deletedAt: null,
+            },
             include: { category: true }
         })
     }

@@ -21,37 +21,55 @@ export const validate = (validations: ValidationChain[]) => {
 }
 
 export const createProductValidation = [
-    body('nama')
+    body('name')
         .trim()
         .notEmpty().withMessage('Nama produk wajib diisi')
         .isLength({ min: 3 }).withMessage('Nama produk minimal 3 karakter'),
 
-    body('deskripsi')
+    body('description')
         .trim()
         .notEmpty().withMessage('Deskripsi wajib diisi'),
 
-    body('harga')
+    body('price')
         .isNumeric().withMessage('Harga harus angka')
-        .custom(value => value > 0).withMessage('Harga harus lebih dari 0')
+        .custom(value => value > 0).withMessage('Harga harus lebih dari 0'),
+
+    body('stock')
+        .isNumeric().withMessage('Stock harus angka')
+        .custom(value => value >= 0).withMessage('Stock harus lebih dari 0'),
+
+    body('category_id')
+        .isNumeric().withMessage('Category ID harus angka')
+        .custom(value => value > 0).withMessage('Category ID harus lebih dari 0'),
 ]
 
 export const updateProductValidation = [
     param('id')
         .isNumeric().withMessage('ID harus angka'),
 
-    body('nama')
+    body('name')
         .optional()
         .trim()
         .isLength({ min: 3 }).withMessage('Nama produk minimal 3 karakter'),
 
-    body('deskripsi')
+    body('description')
         .optional()
         .trim(),
 
-    body('harga')
+    body('price')
         .optional()
         .isNumeric().withMessage('Harga harus angka')
-        .custom(value => value > 0).withMessage('Harga harus lebih dari 0')
+        .custom(value => value > 0).withMessage('Harga harus lebih dari 0'),
+
+    body('stock')
+        .optional()
+        .isNumeric().withMessage('Stock harus angka')
+        .custom(value => value >= 0).withMessage('Stock harus lebih dari 0'),
+
+    body('category_id')
+        .optional()
+        .isNumeric().withMessage('Category ID harus angka')
+        .custom(value => value > 0).withMessage('Category ID harus lebih dari 0'),
 ]
 
 export const getProductByIdValidation = [

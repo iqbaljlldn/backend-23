@@ -1,14 +1,11 @@
-import dotenv from "dotenv"
 import express, { type NextFunction, type Request, type Response } from "express"
 import helmet from "helmet"
 import cors from "cors"
 import morgan from "morgan"
 import { successResponse } from "#utils/response"
 import productRouter from "#routes/product.route"
+import categoryRouter from "#routes/category.route"
 import { errorHandler } from "#middlewares/error.handler"
-
-dotenv.config()
-
 const app = express()
 
 app.use(helmet())
@@ -58,6 +55,7 @@ app.get('/', (req: Request, res: Response) => {
 })
 
 app.use('/api/products', productRouter)
+app.use('/api/categories', categoryRouter)
 
 app.use(errorHandler)
 
