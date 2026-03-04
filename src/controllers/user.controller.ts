@@ -24,8 +24,8 @@ export const show = async (req: Request, res: Response) => {
 
 export const store = async (req: Request, res: Response) => {
     try {
-        const { name, email } = req.body;
-        const user = await UserService.create({ name, email });
+        const { name, email, password } = req.body;
+        const user = await UserService.create({ name, email, password });
         return successResponse(res, "Create user success", user, null, 201);
     } catch (error) {
         return errorResponse(res, `Create user failed: ${error}`, 500);

@@ -1,4 +1,5 @@
 import prisma from "#utils/prisma";
+import bcrypt from "bcrypt";
 
 export class UserService {
     static async getAll() {
@@ -18,9 +19,12 @@ export class UserService {
         });
     }
 
-    static async create(data: { name: string, email: string }) {
+    static async create(data: { name: string, email: string, password: string, role?: string }) {
         return await prisma.user.create({
-            data
+            data: {
+                ...data,
+                password_hash: await bcrypt.hash(data.password, 10)
+            }
         });
     }
 
