@@ -16,6 +16,7 @@ app.use(cors())
 app.use(morgan('dev'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+app.use(express.static("./"))
 
 app.use((req: Request, _res: Response, next: NextFunction) => {
     console.log(`Request masuk jam ${new Date().toISOString()}`)
@@ -23,24 +24,24 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
     next()
 })
 
-app.use((req: Request, res: Response, next: NextFunction) => {
-    const apiKey = req.headers['x-api-key']
-    if (!apiKey) {
-        return res.status(401).json({
-            success: false,
-            message: "Header X-API-Key wajib diisi untuk akses API!"
-        });
-    }
+// app.use((req: Request, res: Response, next: NextFunction) => {
+//     const apiKey = req.headers['x-api-key']
+//     if (!apiKey) {
+//         return res.status(401).json({
+//             success: false,
+//             message: "Header X-API-Key wajib diisi untuk akses API!"
+//         });
+//     }
 
-    if (apiKey !== 'secret-api-key-123') {
-        return res.status(403).json({
-            success: false,
-            message: "API Key tidak valid!"
-        });
-    }
+//     if (apiKey !== 'secret-api-key-123') {
+//         return res.status(403).json({
+//             success: false,
+//             message: "API Key tidak valid!"
+//         });
+//     }
 
-    next()
-})
+//     next()
+// })
 
 app.get('/', (req: Request, res: Response) => {
     const processTime = Date.now() - (req.startTime ?? Date.now())

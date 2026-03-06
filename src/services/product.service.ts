@@ -29,7 +29,14 @@ export class ProductService {
         return product
     }
 
-    static async create(data: { name: string, description: string, price: number, stock: number, category_id: number }): Promise<Products> {
+    static async create(data: {
+        name: string,
+        description: string,
+        price: number,
+        stock: number,
+        category_id: number,
+        image: string,
+    }): Promise<Products> {
         return await prisma.products.create({ data, include: { category: true } })
     }
 

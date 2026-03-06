@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import { ProductService } from "#services/product.service";
 import { asyncHandler } from "#utils/async.handler";
-import { successResponse } from "#utils/response";
+import { errorResponse, successResponse } from "#utils/response";
 
 export const getAllProducts = asyncHandler(async (_req: Request, res: Response) => {
     const products = await ProductService.getAll()
@@ -15,7 +15,17 @@ export const getProductById = asyncHandler(async (req: Request, res: Response) =
 })
 
 export const createProduct = asyncHandler(async (req: Request, res: Response) => {
-    const product = await ProductService.create(req.body)
+    const file = req.file
+    if (!file) return errorResponse(res, "Gambar produk wajib diisi", 400)
+    const imageUrl = `public/uploads/${file.filename}`
+    const productData = {
+        ...req.body,
+        price: Number(req.body.price),
+        stock: Number(req.body.stock),
+        category_id: Number(req.body.category_id),
+        image: imageUrl
+    }
+    const product = await ProductService.create(productData)
     return successResponse(res, "Produk berhasil ditambahkan", product, null, 201)
 })
 
