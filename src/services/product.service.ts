@@ -1,4 +1,4 @@
-import prisma from "#utils/prisma"
+import { countAll, create, findAll, findById, softDelete, update } from "#repositories/product.repository"
 import type { Prisma, Products } from "@prisma/client"
 
 interface FindAllParams {
@@ -35,19 +35,11 @@ export class ProductService {
             }
         }
 
-        const products = await prisma.products.findMany({
-            skip: skip,
-            take: limit,
-            where: whereClause,
-            orderBy: sortBy ? { [sortBy]: sortOrder || 'desc' } : { createdAt: 'desc' },
-            include: {
-                category: true,
-            },
-        });
+        const sortCriteria: Prisma.ProductsOrderByWithRelationInput = sortBy ? { [sortBy]: sortOrder || "desc" } : { createdAt: "desc" }
 
-        const totalItems = await prisma.products.count({
-            where: whereClause
-        })
+        const products = await findAll(skip, limit, whereClause, sortCriteria)
+
+        const totalItems = await countAll(whereClause)
 
         return {
             products,
@@ -58,65 +50,34 @@ export class ProductService {
     }
 
     static async getById(id: number): Promise<Products> {
-        const product = await prisma.products.findUnique({
-            where: {
-                id,
-                deletedAt: null
-            },
-            include: {
-                category: true,
-            }
-        })
+        const product = await findById(id)
         if (!product) {
             throw new Error("Produk tidak ditemukan")
         }
         return product
     }
 
-    static async create(data: {
-        name: string,
-        description: string,
-        price: number,
-        stock: number,
-        category_id: number,
-        image: string,
-    }): Promise<Products> {
-        return await prisma.products.create({ data, include: { category: true } })
+    static async create(data: any): Promise<Products> {
+        if (data.stock < 0) throw new Error("Stock tidak boleh negatif")
+        if (data.price < 0) throw new Error("Harga tidak boleh negatif")
+        return await create(data)
     }
 
     static async update(
         id: number,
-        data: {
-            name?: string,
-            description?: string,
-            price?: number,
-            stock?: number,
-            category_id?: number
-        }): Promise<Products | undefined> {
+        data: any): Promise<Products | undefined> {
         await this.getById(id)
 
-        return await prisma.products.update({
-            where: {
-                id,
-                deletedAt: null
-            },
-            data,
-            include: { category: true }
-        })
+        if (data.stock < 0) throw new Error("Stock tidak boleh negatif")
+        if (data.price < 0) throw new Error("Harga tidak boleh negatif")
+
+        return await update(id, data)
     }
 
     static async delete(id: number): Promise<Products | undefined> {
         await this.getById(id)
 
-        return prisma.products.update({
-            where: {
-                id,
-                deletedAt: null
-            },
-            data: {
-                deletedAt: new Date()
-            }
-        })
+        return softDelete(id)
     }
 
     // static async search(name?: string, maxPrice?: number): Promise<Products[]> {
