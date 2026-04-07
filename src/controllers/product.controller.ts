@@ -3,9 +3,28 @@ import { ProductService } from "#services/product.service";
 import { asyncHandler } from "#utils/async.handler";
 import { errorResponse, successResponse } from "#utils/response";
 
-export const getAllProducts = asyncHandler(async (_req: Request, res: Response) => {
-    const products = await ProductService.getAll()
-    return successResponse(res, "Daftar produk", products)
+export const getAllProducts = asyncHandler(async (req: Request, res: Response) => {
+    const page = Number(req.body.page) || 1
+    const limit = Number(req.body.limit) || 10
+    const search = req.body.search as any
+    const sortBy = req.body.sortBy as string
+    const sortOrder = (req.body.sortOrder as "asc" | "desc") || "desc"
+
+    const results = await ProductService.getAll({
+        page,
+        limit,
+        search,
+        sortBy,
+        sortOrder,
+    })
+
+    const pagination = {
+        page: results.currentPage,
+        limit: limit,
+        total: results.totalItems
+    }
+
+    return successResponse(res, "Daftar produk", results.products, pagination)
 })
 
 export const getProductById = asyncHandler(async (req: Request, res: Response) => {
@@ -41,12 +60,12 @@ export const deleteProduct = asyncHandler(async (req: Request, res: Response) =>
     return successResponse(res, "Produk berhasil dihapus", product)
 })
 
-export const searchProducts = asyncHandler(async (req: Request, res: Response) => {
-    const { name, max_price } = req.query
+// export const searchProducts = asyncHandler(async (req: Request, res: Response) => {
+//     const { name, max_price } = req.query
 
-    const products = await ProductService.search(
-        name as string,
-        max_price ? Number(max_price) : undefined
-    )
-    return successResponse(res, "Hasil pencarian", products)
-})
+//     const products = await ProductService.search(
+//         name as string,
+//         max_price ? Number(max_price) : undefined
+//     )
+//     return successResponse(res, "Hasil pencarian", products)
+// })
