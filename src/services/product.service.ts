@@ -1,5 +1,8 @@
 import { countAll, create, findAll, findById, softDelete, update } from "#repositories/product.repository"
 import type { Prisma, Products } from "@prisma/client"
+// src/services/product.service.ts
+import { ProductRepository } from '#repositories/product.repository';
+import type { IProduct, ICreateProduct, IUpdateProduct } from "#model/product.model";
 
 interface FindAllParams {
     page: number
@@ -10,6 +13,59 @@ interface FindAllParams {
     }
     sortBy?: string;
     sortOrder?: 'asc' | 'desc'
+}
+
+
+export class ProductServiceV2 {
+    private repository: ProductRepository;
+
+    constructor(repository: ProductRepository) {
+        this.repository = repository;
+    }
+
+    async getAllProducts(): Promise<IProduct[]> {
+        return await this.repository.findAll();
+    }
+
+    async getProductById(id: number): Promise<IProduct> {
+        const product = await this.repository.findById(id);
+        if (!product) {
+            throw new Error(`Product with id ${id} not found`);
+        }
+        return product;
+    }
+
+    async createProduct(data: ICreateProduct): Promise<IProduct> {
+        // Business logic: validasi
+        if (data.price <= 0) {
+            throw new Error('Price must be greater than 0');
+        }
+        if (data.stock < 0) {
+            throw new Error('Stock cannot be negative');
+        }
+
+        return await this.repository.create(data);
+    }
+
+    async updateProduct(id: number, data: IUpdateProduct): Promise<IProduct> {
+        const product = await this.repository.update(id, data);
+        if (!product) {
+            throw new Error(`Product with id ${id} not found`);
+        }
+        return product;
+    }
+
+    async deleteProduct(id: number): Promise<void> {
+        const deleted = await this.repository.delete(id);
+        if (!deleted) {
+            throw new Error(`Product with id ${id} not found`);
+        }
+    }
+
+    async checkStock(id: number): Promise<boolean> {
+        const product = await this.getProductById(id);
+        return (product.stock ?? 0) > 0;
+    }
 }
 
 export class ProductService {
