@@ -1,8 +1,7 @@
 import { countAll, create, findAll, findById, softDelete, update } from "#repositories/product.repository"
 import type { Prisma, Products } from "@prisma/client"
-// src/services/product.service.ts
 import { ProductRepository } from '#repositories/product.repository';
-import type { IProduct, ICreateProduct, IUpdateProduct } from "#model/product.model";
+// import type { IProduct, ICreateProduct, IUpdateProduct } from "#model/product.model";
 
 interface FindAllParams {
     page: number
@@ -23,11 +22,53 @@ export class ProductServiceV2 {
         this.repository = repository;
     }
 
-    async getAllProducts(): Promise<IProduct[]> {
-        return await this.repository.findAll();
+    async execute() {
+        const stats = this.repository.getStatistics()
+        const categoryStats = this.repository.getProductsByCategoryStats()
+
+        return {
+            overview: stats,
+            byCategory: categoryStats
+        }
     }
 
-    async getProductById(id: number): Promise<IProduct> {
+    async getAll(params: FindAllParams) {
+        const { page, limit, search, sortBy, sortOrder } = params
+
+        const skip = (page - 1) * limit
+
+        const whereClause: Prisma.ProductsWhereInput = {
+            deletedAt: null,
+        }
+
+        if (search?.name) {
+            whereClause.name = {
+                contains: search.name,
+                mode: 'insensitive'
+            }
+        }
+
+        if (search?.maxPrice) {
+            whereClause.price = {
+                lte: search.maxPrice
+            }
+        }
+
+        const sortCriteria: Prisma.ProductsOrderByWithRelationInput = sortBy ? { [sortBy]: sortOrder || "desc" } : { createdAt: "desc" }
+
+        const products = await this.repository.findAll(skip, limit, whereClause, sortCriteria)
+
+        const totalItems = await this.repository.countAll(whereClause)
+
+        return {
+            products,
+            totalItems,
+            totalPages: Math.ceil(totalItems / limit),
+            currentPage: page
+        }
+    }
+
+    async getById(id: number): Promise<Products> {
         const product = await this.repository.findById(id);
         if (!product) {
             throw new Error(`Product with id ${id} not found`);
@@ -35,35 +76,31 @@ export class ProductServiceV2 {
         return product;
     }
 
-    async createProduct(data: ICreateProduct): Promise<IProduct> {
-        // Business logic: validasi
-        if (data.price <= 0) {
-            throw new Error('Price must be greater than 0');
-        }
-        if (data.stock < 0) {
-            throw new Error('Stock cannot be negative');
-        }
-
-        return await this.repository.create(data);
+    async create(data: any): Promise<Products> {
+        if (data.stock < 0) throw new Error("Stock tidak boleh negatif")
+        if (data.price < 0) throw new Error("Harga tidak boleh negatif")
+        return await this.repository.create(data)
     }
 
-    async updateProduct(id: number, data: IUpdateProduct): Promise<IProduct> {
-        const product = await this.repository.update(id, data);
-        if (!product) {
-            throw new Error(`Product with id ${id} not found`);
-        }
-        return product;
+    async update(
+        id: number,
+        data: any): Promise<Products | undefined> {
+        await this.getById(id)
+
+        if (data.stock < 0) throw new Error("Stock tidak boleh negatif")
+        if (data.price < 0) throw new Error("Harga tidak boleh negatif")
+
+        return await this.repository.update(id, data)
     }
 
-    async deleteProduct(id: number): Promise<void> {
-        const deleted = await this.repository.delete(id);
-        if (!deleted) {
-            throw new Error(`Product with id ${id} not found`);
-        }
+    async delete(id: number): Promise<Products | undefined> {
+        await this.getById(id)
+
+        return this.repository.delete(id)
     }
 
     async checkStock(id: number): Promise<boolean> {
-        const product = await this.getProductById(id);
+        const product = await this.getById(id);
         return (product.stock ?? 0) > 0;
     }
 }

@@ -1,49 +1,78 @@
 import prisma from "#utils/prisma"
 import type { Prisma } from "@prisma/client"
 
-// src/repositories/product.repository.ts
-import type { IProduct, ICreateProduct, IUpdateProduct } from "#model/product.model";
-
 export class ProductRepository {
-    // Simulasi database (ganti dengan real DB connection)
-    private products: IProduct[] = [];
-    private currentId = 1;
-
-    async findAll(): Promise<IProduct[]> {
-        return this.products;
+    async findAll(skip: number, take: number, where: Prisma.ProductsWhereInput, orderBy: Prisma.ProductsOrderByWithRelationInput) {
+        return await prisma.products.findMany({
+            skip,
+            take,
+            where,
+            orderBy,
+            include: { category: true },
+        })
     }
 
-    async findById(id: number): Promise<IProduct | undefined> {
-        return this.products.find(p => p.id === id);
+    async findComplex(categoryName: string, maxPrice: number) {
+        return await prisma.products.findMany({
+            where: {
+                OR: [
+                    {
+                        AND: [
+                            { category: { name: categoryName } },
+                            { price: { lt: maxPrice } }
+                        ]
+                    },
+                    { category: { name: 'Aksesoris' } },
+                ]
+            }
+        })
     }
 
-    async create(data: ICreateProduct): Promise<IProduct> {
-        const newProduct: IProduct = {
-            id: this.currentId++,
-            ...data,
-            createdAt: new Date()
-        };
-        this.products.push(newProduct);
-        return newProduct;
+    async getStatistics() {
+        return await prisma.products.aggregate({
+            _count: { id: true },
+            _avg: { price: true },
+            _sum: { stock: true },
+            _min: { price: true },
+            _max: { price: true },
+        })
     }
 
-    async update(id: number, data: IUpdateProduct): Promise<IProduct | undefined> {
-        const index = this.products.findIndex(p => p.id === id);
-        if (index === -1) return undefined;
-
-        this.products[index] = {
-            ...this.products[index],
-            ...data
-        };
-        return this.products[index];
+    async getProductsByCategoryStats() {
+        return await prisma.products.groupBy({
+            by: ['category_id'],
+            _count: { id: true },
+            _avg: { price: true },
+        })
     }
 
-    async delete(id: number): Promise<boolean> {
-        const index = this.products.findIndex(p => p.id === id);
-        if (index === -1) return false;
+    async countAll(where: Prisma.ProductsWhereInput) {
+        return await prisma.products.count({ where })
+    }
 
-        this.products.splice(index, 1);
-        return true;
+    async findById(id: number) {
+        return await prisma.products.findUnique({
+            where: { id, deletedAt: null },
+            include: { category: true }
+        })
+    }
+
+    async create(data: Prisma.ProductsCreateInput) {
+        return await prisma.products.create({ data })
+    }
+
+    async update(id: number, data: Prisma.ProductsUpdateInput) {
+        return await prisma.products.update({
+            where: { id, deletedAt: null },
+            data
+        })
+    }
+
+    async delete(id: number) {
+        return await prisma.products.update({
+            where: { id },
+            data: { deletedAt: new Date() }
+        })
     }
 }
 

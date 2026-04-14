@@ -19,6 +19,7 @@ const productService = new ProductServiceV2(productRepo)
 const productController = new ProductController(productService)
 
 router.get('/', productController.getProducts)
+router.get('/stats', productController.getStats)
 router.get('/:id', validate(getProductByIdValidation), productController.getProduct)
 router.post('/', upload.single("image"), validate(createProductValidation), productController.createProduct)
 router.put('/:id', validate(updateProductValidation), productController.updateProduct)
