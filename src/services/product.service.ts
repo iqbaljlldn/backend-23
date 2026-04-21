@@ -3,17 +3,16 @@ import type { Prisma, Products } from "@prisma/client"
 import { ProductRepository } from '#repositories/product.repository';
 // import type { IProduct, ICreateProduct, IUpdateProduct } from "#model/product.model";
 
-interface FindAllParams {
+export interface FindAllParams {
     page: number
     limit: number
     search?: {
         name?: string
         maxPrice?: number
-    }
+    } | undefined
     sortBy?: string;
     sortOrder?: 'asc' | 'desc'
 }
-
 
 export class ProductServiceV2 {
     private repository: ProductRepository;

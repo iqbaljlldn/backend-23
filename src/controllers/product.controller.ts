@@ -12,11 +12,17 @@ export class ProductController {
 
     // Arrow function untuk binding 'this' otomatis
     getProducts = async (req: Request, res: Response) => {
-        const page = Number(req.body.page) || 1
-        const limit = Number(req.body.limit) || 10
-        const search = req.body.search as any
-        const sortBy = req.body.sortBy as string
-        const sortOrder = (req.body.sortOrder as "asc" | "desc") || "desc"
+        const page = Number(req.query.page) || 1
+        const limit = Number(req.query.limit) || 10
+        const searchName = String(req.query.search)
+        const maxPrice = Number(req.query.maxPrice)
+        const sortBy = req.query.sortBy as string
+        const sortOrder = (req.query.sortOrder as "asc" | "desc") || "desc"
+
+        const search: { name?: string, maxPrice?: number } | undefined = {
+            name: searchName,
+            maxPrice: maxPrice
+        }
 
         const results = await this.productService.getAll({
             page,
